@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ร้านอาหารก้านแก้ว | Kankaew Restaurant - บริการสั่งอาหารออนไลน์</title>
+  <meta name="description" content="สัมผัสรสชาติอาหารไทยต้นตำรับระดับพรีเมียม สั่งซื้ออาหารออนไลน์พร้อมระบบการออกใบเสร็จที่รวดเร็วและปลอดภัย">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- Supabase JS Client CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="container navbar-container">
+      <a href="#" class="logo">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent);"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        ก้านแก้ว <span>Kankaew</span>
+      </a>
+      
+      <div class="nav-actions">
+        <!-- Database Connection Status Badge -->
+        <div id="db-status-badge">
+          <span style="color: var(--text-light);">● Loading status...</span>
+        </div>
+        
+        <!-- Settings button to configure Supabase -->
+        <button class="btn-icon" id="settings-btn" title="ตั้งค่าการเชื่อมต่อฐานข้อมูล">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero / Banner Section -->
+  <header class="hero">
+    <div class="container">
+      <span class="hero-tag">Traditional & Modern Culinary</span>
+      <h1 class="hero-title">ศิลปะแห่งรสชาติไทยระดับพรีเมียม</h1>
+      <p class="hero-subtitle">
+        คัดสรรวัตถุดิบชั้นเลิศ ผสมผสานกรรมวิธีการปรุงอาหารแบบต้นตำรับ สู่เมนูจานโปรดของคุณที่สั่งง่ายเพียงปลายนิ้วสัมผัส
+      </p>
+    </div>
+  </header>
+
+  <!-- Main Menu Area -->
+  <main class="container">
+    
+    <!-- Controls (Search & Category Filters) -->
+    <div class="menu-controls">
+      <!-- Search Input -->
+      <div class="search-box">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" id="search-input" placeholder="ค้นหาเมนูอาหารรสเลิศ...">
+      </div>
+      
+      <!-- Category Tabs -->
+      <div class="category-tabs">
+        <button class="category-tab active" data-category="all">ทั้งหมด</button>
+        <button class="category-tab" data-category="appetizer">ของว่าง</button>
+        <button class="category-tab" data-category="main">อาหารจานหลัก</button>
+        <button class="category-tab" data-category="dessert">ของหวาน</button>
+        <button class="category-tab" data-category="drink">เครื่องดื่ม</button>
+      </div>
+    </div>
+
+    <!-- Menu Grid -->
+    <div class="menu-grid" id="menu-grid">
+      <!-- Generated via app.js -->
+    </div>
+
+  </main>
+
+  <!-- Floating Cart Trigger -->
+  <div class="floating-cart" id="floating-cart-trigger">
+    <div class="cart-icon-wrapper">
+      <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+      <span class="cart-count" id="floating-cart-count">0</span>
+    </div>
+    <div class="cart-text-details">
+      <span class="cart-text-label">รายการสั่งซื้อของคุณ</span>
+      <span class="cart-text-amount" id="floating-cart-amount">฿0.00</span>
+    </div>
+    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+  </div>
+
+  <!-- Cart & Checkout Modal -->
+  <div class="modal-overlay" id="cart-modal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h2 class="modal-title">ตะกร้าสินค้าของคุณ</h2>
+        <button class="btn-close" aria-label="Close modal">
+          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        
+        <!-- Cart Items list -->
+        <div id="cart-items-container" class="cart-items-list">
+          <!-- Filled via JavaScript -->
+        </div>
+
+        <!-- Bill Summary Card -->
+        <div class="bill-summary">
+          <div class="bill-row">
+            <span>ค่าอาหารรวม (Subtotal)</span>
+            <span id="cart-subtotal">฿0.00</span>
+          </div>
+          <div class="bill-row">
+            <span>ค่าบริการ (Service Charge 10%)</span>
+            <span id="cart-service">฿0.00</span>
+          </div>
+          <div class="bill-row">
+            <span>ภาษีมูลค่าเพิ่ม (VAT 7%)</span>
+            <span id="cart-vat">฿0.00</span>
+          </div>
+          <div class="bill-row total">
+            <span>ยอดรวมสุทธิ (Net Total)</span>
+            <span class="total-price" id="cart-total">฿0.00</span>
+          </div>
+        </div>
+
+        <!-- Checkout Form details -->
+        <form id="checkout-form">
+          <h3 class="modal-title" style="font-size: 18px; margin-bottom: 16px; border-top: 1px solid var(--border-color); padding-top: 20px;">ข้อมูลผู้สั่งซื้อ</h3>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="customer-name">ชื่อผู้สั่งซื้อ *</label>
+              <input type="text" id="customer-name" placeholder="ระบุชื่อของคุณ" required>
+            </div>
+            <div class="form-group">
+              <label for="table-number">เลขโต๊ะ / สั่งกลับบ้าน</label>
+              <input type="text" id="table-number" placeholder="เช่น โต๊ะ 5 หรือ สั่งกลับบ้าน">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="phone-number">เบอร์โทรศัพท์</label>
+              <input type="tel" id="phone-number" placeholder="เช่น 089-XXXXXXX">
+            </div>
+            <div class="form-group">
+              <label for="order-notes">หมายเหตุถึงครัว</label>
+              <input type="text" id="order-notes" placeholder="ระบุเพิ่มเติม เช่น แพ้อาหารทะเล">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>วิธีการชำระเงิน *</label>
+            <div class="payment-selector">
+              <div class="payment-option active" data-value="qr_code">
+                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h3m-3 0H9m12 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span class="payment-option-title">โอนชำระ (PromptPay)</span>
+              </div>
+              <div class="payment-option" data-value="cash">
+                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                <span class="payment-option-title">ชำระเงินสด (Cash)</span>
+              </div>
+            </div>
+          </div>
+
+          <div id="payment-qr-warning" class="info-alert" style="margin-top: 10px;">
+            ℹ️ ระบบจะออกคิวอาร์โค้ดพร้อมเพย์สำหรับชำระเงินให้คุณในใบเสร็จโดยอัตโนมัติ
+          </div>
+
+          <div style="margin-top: 24px;">
+            <button type="submit" class="btn-primary" id="cart-checkout-btn">
+              ยืนยันการสั่งซื้อและรับใบเสร็จ
+            </button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Receipt View Modal (Printable) -->
+  <div class="modal-overlay" id="receipt-modal">
+    <div class="modal-container" style="max-width: 450px;">
+      <div class="modal-header">
+        <h2 class="modal-title">ใบรับเงิน / ใบเสร็จสั่งอาหาร</h2>
+        <button class="btn-close" aria-label="Close modal">
+          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body" style="padding: 16px;">
+        
+        <!-- Printable receipt frame -->
+        <div id="receipt-modal-container">
+          <div class="receipt-paper">
+            <div class="receipt-header">
+              <div class="receipt-shop-name">ร้านอาหารก้านแก้ว</div>
+              <div class="receipt-shop-info">
+                123 ถนนสุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพฯ 10110<br>
+                โทร: 02-123-4567 | TAX ID: 0105563000999
+              </div>
+            </div>
+            
+            <div class="receipt-divider"></div>
+            
+            <div class="receipt-meta">
+              <div class="receipt-meta-row">
+                <span>เลขที่ใบเสร็จ:</span>
+                <span id="receipt-no">OR-10001</span>
+              </div>
+              <div class="receipt-meta-row">
+                <span>วันที่/เวลา:</span>
+                <span id="receipt-date">03/07/2569 14:30</span>
+              </div>
+              <div class="receipt-meta-row">
+                <span>ลูกค้า:</span>
+                <span id="receipt-customer">คุณมีเกียรติ</span>
+              </div>
+              <div class="receipt-meta-row">
+                <span>โต๊ะ/ประเภท:</span>
+                <span id="receipt-table">โต๊ะ 4</span>
+              </div>
+              <div class="receipt-meta-row">
+                <span>การชำระเงิน:</span>
+                <span id="receipt-payment">เงินโอน (PromptPay)</span>
+              </div>
+            </div>
+            
+            <div class="receipt-divider"></div>
+            
+            <!-- Items ordered list -->
+            <div class="receipt-items" id="receipt-items-container">
+              <!-- Dynamically populated -->
+            </div>
+            
+            <div class="receipt-divider"></div>
+            
+            <!-- Calculations -->
+            <div class="receipt-totals">
+              <div class="receipt-totals-row">
+                <span>ค่าอาหารรวม (Subtotal)</span>
+                <span id="receipt-subtotal">฿0.00</span>
+              </div>
+              <div class="receipt-totals-row">
+                <span>ค่าบริการ (Service Charge 10%)</span>
+                <span id="receipt-service">฿0.00</span>
+              </div>
+              <div class="receipt-totals-row">
+                <span>ภาษีมูลค่าเพิ่ม (VAT 7%)</span>
+                <span id="receipt-vat">฿0.00</span>
+              </div>
+              <div class="receipt-totals-row grand-total">
+                <span>ยอดเงินทั้งสิ้น (Net Total)</span>
+                <span id="receipt-grandtotal">฿0.00</span>
+              </div>
+            </div>
+
+            <!-- Optional order kitchen note -->
+            <div id="receipt-notes-row" style="margin-top: 15px; font-size: 11px; display: none;">
+              <strong>หมายเหตุ:</strong> <span id="receipt-notes"></span>
+            </div>
+
+            <!-- QR Code PromptPay Section -->
+            <div class="receipt-qr-payment" id="receipt-qr-section">
+              <div class="receipt-qr-title">สแกนชำระผ่าน PromptPay QR</div>
+              <div class="receipt-qr-code">
+                <!-- Live PromptPay QR code -->
+                <img id="promptpay-qr-code-img" src="" alt="PromptPay QR Code">
+              </div>
+              <div class="receipt-shop-info" id="receipt-promptpay-info" style="font-weight: 600; font-size: 13px;">พร้อมเพย์: 0812345678</div>
+              <div class="receipt-shop-info" style="font-size: 10px; color: #777777;">*ตรวจสอบชื่อผู้รับโอนและยอดเงินก่อนกดยืนยัน*</div>
+            </div>
+            
+            <div class="receipt-footer">
+              *** ขอบคุณที่ใช้บริการ / Thank You ***<br>
+              อาหารไทยต้นตำรับประทับใจทุกรสสัมผัส
+            </div>
+          </div>
+        </div>
+
+        <!-- Buttons Row -->
+        <div class="btn-actions-row" style="margin-top: 24px;">
+          <button class="btn-secondary" id="close-receipt-btn">ปิดหน้าต่าง</button>
+          <button class="btn-primary" id="print-receipt-btn">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+            พิมพ์ใบเสร็จ (Print)
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Supabase Settings & Config Modal -->
+  <div class="modal-overlay" id="settings-modal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h2 class="modal-title">ตั้งค่าฐานข้อมูล Supabase</h2>
+        <button class="btn-close" aria-label="Close modal">
+          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        
+        <div class="info-alert" style="background-color: var(--primary-light); border-left-color: var(--primary);">
+          💡 หากเว้นว่างฟิลด์ Supabase URL และ API Key ไว้ ระบบจะใช้งานฐานข้อมูล <strong>Demo Mode (Local DB)</strong> ในเบราว์เซอร์ เพื่อให้ระบบทำงานได้ทันที
+        </div>
+
+        <form id="settings-form">
+          <div class="form-group">
+            <label for="input-url">Supabase URL</label>
+            <input type="url" id="input-url" placeholder="https://xxxxxx.supabase.co">
+          </div>
+          
+          <div class="form-group">
+            <label for="input-key">Supabase Anon API Key</label>
+            <input type="password" id="input-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+          </div>
+
+          <div class="form-group">
+            <label for="input-promptpay">เบอร์พร้อมเพย์รับชำระเงิน (PromptPay Phone / Tax ID) *</label>
+            <input type="text" id="input-promptpay" value="0812345678" required>
+            <span style="font-size: 12px; color: var(--text-secondary); margin-top: 4px; display: block;">กรอกเบอร์มือถือพร้อมเพย์หรือเลขบัตรประจำตัวประชาชน เพื่อออก QR Code ในใบเสร็จจริง</span>
+          </div>
+
+          <h4 style="margin: 20px 0 10px 0; border-top: 1px solid var(--border-color); padding-top: 15px;">โครงสร้างตาราง SQL สำหรับจัดตั้ง Supabase</h4>
+          <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px;">
+            คัดลอกคำสั่งด้านล่างนี้ไปวางและรันในหน้า <strong>SQL Editor</strong> บนเว็บไซต์ Supabase ของคุณเพื่อเตรียมความพร้อม:
+          </p>
+          <div class="sql-instructions">
+-- รันโค้ด SQL จากไฟล์ supabase-schema.sql ในไดเรกทอรีโครงการ
+-- ประกอบไปด้วยการสร้างตาราง menu_items, orders, order_items
+-- และติดตั้งนโยบาย RLS (Row Level Security) เพื่อความปลอดภัย
+          </div>
+
+          <div style="margin-top: 24px;">
+            <button type="submit" class="btn-primary">บันทึกการตั้งค่า</button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Core JavaScript -->
+  <script src="app.js"></script>
+</body>
+</html>
