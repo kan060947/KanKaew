@@ -123,6 +123,7 @@ class KankaewApp {
   constructor() {
     this.menu = [];
     this.cart = [];
+    this.user = null; // Store authenticated user session details
     this.activeCategory = 'all';
     this.searchQuery = '';
     this.supabaseClient = null;
@@ -141,6 +142,7 @@ class KankaewApp {
     this.setupEventListeners();
     await this.initDatabaseConnection();
     await this.fetchMenu();
+    await this.checkUserSession();
     this.renderMenu();
     this.updateCartUI();
   }
@@ -195,8 +197,10 @@ class KankaewApp {
     this.loadConfig();
     this.initDatabaseConnection().then(() => {
       this.fetchMenu().then(() => {
-        this.renderMenu();
-        this.closeModal('settings-modal');
+        this.checkUserSession().then(() => {
+          this.renderMenu();
+          this.closeModal('settings-modal');
+        });
       });
     });
   }
@@ -207,6 +211,17 @@ class KankaewApp {
         // Ensure Supabase JS library is loaded (loaded via CDN index.html)
         if (window.supabase) {
           this.supabaseClient = window.supabase.createClient(this.supabaseUrl, this.supabaseKey);
+          
+          // Setup auth listeners
+          this.supabaseClient.auth.onAuthStateChange((event, session) => {
+            console.log("Auth state change event:", event);
+            if (session) {
+              this.user = session.user;
+            } else {
+              this.user = null;
+            }
+            this.updateAuthUI();
+          });
         } else {
           console.error('Supabase SDK not loaded on window');
           this.dbMode = 'demo';
@@ -231,14 +246,12 @@ class KankaewApp {
         if (data && data.length > 0) {
           this.menu = data;
         } else {
-          // If connection works but tables are empty, use default menu
           console.warn('Supabase menu_items table empty. Seeding defaults locally.');
           this.menu = DEFAULT_MENU;
         }
       } catch (err) {
         console.error('Supabase fetch menu error, falling back to local menu:', err);
         this.menu = DEFAULT_MENU;
-        // Visual indicator that fetch failed
         alert('ไม่สามารถเชื่อมต่อฐานข้อมูล Supabase ได้สำเร็จ ระบบได้ปรับเข้าสู่ Demo Mode อัตโนมัติ (กรุณาตรวจสอบโครงสร้างตารางหรือสิทธิ์การเข้าถึง RLS)');
         this.dbMode = 'demo';
         document.getElementById('db-status-badge').innerHTML = '<span style="color: var(--danger); font-weight: 600;">● Connection Failed (Demo Mode)</span>';
@@ -248,7 +261,118 @@ class KankaewApp {
     }
   }
 
+  async checkUserSession() {
+    if (this.dbMode === 'supabase' && this.supabaseClient) {
+      try {
+        const { data: { session }, error } = await this.supabaseClient.auth.getSession();
+        if (error) throw error;
+        this.user = session ? session.user : null;
+      } catch (err) {
+        console.error("Error retrieving user session:", err);
+        this.user = null;
+      }
+    } else {
+      // Mock Local authentication session check
+      const savedMockUser = localStorage.getItem('kankaew_mock_user');
+      if (savedMockUser) {
+        try {
+          this.user = JSON.parse(savedMockUser);
+        } catch (e) {
+          this.user = null;
+        }
+      } else {
+        this.user = null;
+      }
+    }
+    this.updateAuthUI();
+  }
+
+  updateAuthUI() {
+    const navUserWrapper = document.getElementById('nav-user-wrapper');
+    const checkoutCustomerName = document.getElementById('customer-name');
+
+    if (!navUserWrapper) return;
+
+    if (this.user) {
+      const email = this.user.email;
+      const displayName = this.user.user_metadata?.full_name || email.split('@')[0];
+      
+      navUserWrapper.innerHTML = `
+        <div class="user-profile-nav">
+          <span>สวัสดี, <strong class="user-email">${displayName}</strong></span>
+          <button class="btn-logout" id="logout-btn">ออกจากระบบ</button>
+        </div>
+      `;
+
+      // Pre-fill checkout form name
+      if (checkoutCustomerName && !checkoutCustomerName.value) {
+        checkoutCustomerName.value = displayName;
+      }
+
+      // Add logout event listener
+      document.getElementById('logout-btn').addEventListener('click', () => this.handleLogout());
+    } else {
+      navUserWrapper.innerHTML = `
+        <button class="btn-login-nav" id="login-nav-btn">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
+          เข้าสู่ระบบ
+        </button>
+      `;
+
+      document.getElementById('login-nav-btn').addEventListener('click', () => {
+        this.openModal('auth-modal');
+      });
+    }
+  }
+
   setupEventListeners() {
+    // Auth Modal tab switcher
+    const tabLogin = document.getElementById('auth-tab-login');
+    const tabRegister = document.getElementById('auth-tab-register');
+    const formLogin = document.getElementById('auth-login-form-wrapper');
+    const formRegister = document.getElementById('auth-register-form-wrapper');
+
+    if (tabLogin && tabRegister) {
+      tabLogin.addEventListener('click', () => {
+        tabRegister.classList.remove('active');
+        tabLogin.classList.add('active');
+        formRegister.classList.remove('active');
+        formLogin.classList.add('active');
+        this.clearAuthMessages();
+      });
+
+      tabRegister.addEventListener('click', () => {
+        tabLogin.classList.remove('active');
+        tabRegister.classList.add('active');
+        formLogin.classList.remove('active');
+        formRegister.classList.add('active');
+        this.clearAuthMessages();
+      });
+    }
+
+    // Login Form Submit
+    const loginForm = document.getElementById('auth-login-form');
+    if (loginForm) {
+      loginForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const email = document.getElementById('login-email').value.trim();
+        const pass = document.getElementById('login-password').value;
+        this.handleLogin(email, pass);
+      });
+    }
+
+    // Register Form Submit
+    const registerForm = document.getElementById('auth-register-form');
+    if (registerForm) {
+      registerForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = document.getElementById('register-name').value.trim();
+        const email = document.getElementById('register-email').value.trim();
+        const pass = document.getElementById('register-password').value;
+        this.handleRegister(email, pass, name);
+      });
+    }
+
     // Category Tabs switching
     const categoryTabs = document.querySelectorAll('.category-tab');
     categoryTabs.forEach(tab => {
@@ -380,6 +504,120 @@ class KankaewApp {
     }
   }
 
+  // Auth Operations
+  clearAuthMessages() {
+    document.getElementById('auth-error').style.display = 'none';
+    document.getElementById('auth-success').style.display = 'none';
+  }
+
+  showAuthError(msg) {
+    const err = document.getElementById('auth-error');
+    err.textContent = msg;
+    err.style.display = 'block';
+    document.getElementById('auth-success').style.display = 'none';
+  }
+
+  showAuthSuccess(msg) {
+    const succ = document.getElementById('auth-success');
+    succ.textContent = msg;
+    succ.style.display = 'block';
+    document.getElementById('auth-error').style.display = 'none';
+  }
+
+  async handleLogin(email, password) {
+    this.clearAuthMessages();
+    try {
+      if (this.dbMode === 'supabase' && this.supabaseClient) {
+        const { data, error } = await this.supabaseClient.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        
+        this.user = data.user;
+        this.showAuthSuccess('เข้าสู่ระบบสำเร็จแล้ว!');
+        setTimeout(() => {
+          this.closeModal('auth-modal');
+          this.updateAuthUI();
+        }, 1000);
+      } else {
+        // Mock login
+        const mockUser = { id: 'mock-uid-12345', email: email, user_metadata: { full_name: email.split('@')[0] } };
+        localStorage.setItem('kankaew_mock_user', JSON.stringify(mockUser));
+        this.user = mockUser;
+        this.showAuthSuccess('เข้าสู่ระบบสำเร็จ (โหมดสาธิต)!');
+        setTimeout(() => {
+          this.closeModal('auth-modal');
+          this.updateAuthUI();
+        }, 1000);
+      }
+    } catch (err) {
+      this.showAuthError(err.message || 'อีเมลหรือรหัสผ่านไม่ถูกต้อง');
+    }
+  }
+
+  async handleRegister(email, password, name) {
+    this.clearAuthMessages();
+    try {
+      if (this.dbMode === 'supabase' && this.supabaseClient) {
+        const { data, error } = await this.supabaseClient.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: name
+            }
+          }
+        });
+        if (error) throw error;
+        
+        // Supabase may require email confirmation
+        if (data.session) {
+          this.user = data.user;
+          this.showAuthSuccess('สมัครสมาชิกและเข้าสู่ระบบสำเร็จ!');
+        } else {
+          this.showAuthSuccess('สมัครสมาชิกสำเร็จ! กรุณาตรวจสอบอีเมลเพื่อยืนยันตน');
+        }
+        
+        setTimeout(() => {
+          this.closeModal('auth-modal');
+          this.updateAuthUI();
+        }, 2000);
+      } else {
+        // Mock register
+        const mockUser = { id: 'mock-uid-12345', email: email, user_metadata: { full_name: name } };
+        localStorage.setItem('kankaew_mock_user', JSON.stringify(mockUser));
+        this.user = mockUser;
+        this.showAuthSuccess('สมัครสมาชิกสำเร็จ (โหมดสาธิต)!');
+        setTimeout(() => {
+          this.closeModal('auth-modal');
+          this.updateAuthUI();
+        }, 1000);
+      }
+    } catch (err) {
+      this.showAuthError(err.message || 'การลงทะเบียนล้มเหลว กรุณากรอกข้อมูลให้ครบถ้วน');
+    }
+  }
+
+  async handleLogout() {
+    try {
+      if (this.dbMode === 'supabase' && this.supabaseClient) {
+        const { error } = await this.supabaseClient.auth.signOut();
+        if (error) throw error;
+      }
+      
+      // Clear local states
+      this.user = null;
+      localStorage.removeItem('kankaew_mock_user');
+      this.updateAuthUI();
+      
+      // Clear forms
+      const checkoutForm = document.getElementById('checkout-form');
+      if (checkoutForm) checkoutForm.reset();
+      
+      alert('ออกจากระบบเรียบร้อยแล้ว');
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
+  }
+
   // Render Menu Grid
   renderMenu() {
     const grid = document.getElementById('menu-grid');
@@ -387,7 +625,6 @@ class KankaewApp {
 
     grid.innerHTML = '';
 
-    // Filter logic
     const filtered = this.menu.filter(item => {
       const matchCategory = this.activeCategory === 'all' || item.category === this.activeCategory;
       const matchSearch = item.name.toLowerCase().includes(this.searchQuery) || 
@@ -429,7 +666,6 @@ class KankaewApp {
         </div>
       `;
 
-      // Event listener for add button
       card.querySelector('.btn-add').addEventListener('click', () => {
         this.addToCart(item.id);
       });
@@ -450,6 +686,13 @@ class KankaewApp {
 
   // Cart Operations
   addToCart(itemId) {
+    // REQUIRE USER LOGIN
+    if (!this.user) {
+      alert('กรุณาเข้าสู่ระบบก่อนทำการสั่งอาหาร');
+      this.openModal('auth-modal');
+      return;
+    }
+
     const item = this.menu.find(m => m.id === itemId || String(m.id) === String(itemId));
     if (!item) return;
 
@@ -526,7 +769,6 @@ class KankaewApp {
     const count = this.getCartCount();
     const totals = this.getCartTotals();
     
-    // Update floating cart trigger state
     const floatingCart = document.getElementById('floating-cart-trigger');
     const badgeCount = document.getElementById('floating-cart-count');
     const totalAmountText = document.getElementById('floating-cart-amount');
@@ -603,7 +845,6 @@ class KankaewApp {
         </div>
       `;
 
-      // Handlers
       itemEl.querySelector('.btn-plus').addEventListener('click', () => this.updateCartQty(c.item.id, 1));
       itemEl.querySelector('.btn-minus').addEventListener('click', () => this.updateCartQty(c.item.id, -1));
       itemEl.querySelector('.btn-remove').addEventListener('click', () => this.removeFromCart(c.item.id));
@@ -622,6 +863,14 @@ class KankaewApp {
   }
 
   async handleCheckout() {
+    // Verify user is authenticated before checking out
+    if (!this.user) {
+      alert('กรุณาเข้าสู่ระบบก่อนทำการยืนยันออเดอร์');
+      this.closeModal('cart-modal');
+      this.openModal('auth-modal');
+      return;
+    }
+
     const customerName = document.getElementById('customer-name').value.trim();
     const tableNumber = document.getElementById('table-number').value.trim();
     const phone = document.getElementById('phone-number').value.trim();
@@ -639,7 +888,7 @@ class KankaewApp {
     }
 
     const totals = this.getCartTotals();
-    const currentCart = [...this.cart]; // copy cart
+    const currentCart = [...this.cart];
     let finalOrderId = null;
     let orderDate = new Date();
 
@@ -654,6 +903,7 @@ class KankaewApp {
         const { data: orderData, error: orderError } = await this.supabaseClient
           .from('orders')
           .insert([{
+            user_id: this.user ? this.user.id : null, // Connects to the logged in user ID
             customer_name: customerName,
             table_number: tableNumber || null,
             phone: phone || null,
@@ -696,11 +946,11 @@ class KankaewApp {
         finalOrderId = 10000 + Math.floor(Math.random() * 90000);
         orderDate = new Date();
 
-        // Save order locally for debugging/history
         const localOrders = JSON.parse(localStorage.getItem('kankaew_local_orders') || '[]');
         localOrders.push({
           id: finalOrderId,
           created_at: orderDate,
+          user_id: this.user ? this.user.id : null,
           customer_name: customerName,
           table_number: tableNumber,
           phone: phone,
@@ -737,13 +987,11 @@ class KankaewApp {
   }
 
   showReceipt(orderId, orderDate, customerName, tableNumber, phone, notes, paymentMethod, items, totals) {
-    // Populate Receipt Paper
     document.getElementById('receipt-no').textContent = `OR-${orderId}`;
     
-    // Format Date: DD/MM/YYYY HH:MM
     const day = String(orderDate.getDate()).padStart(2, '0');
     const month = String(orderDate.getMonth() + 1).padStart(2, '0');
-    const year = orderDate.getFullYear() + 543; // Thai year format optional
+    const year = orderDate.getFullYear() + 543;
     const hours = String(orderDate.getHours()).padStart(2, '0');
     const minutes = String(orderDate.getMinutes()).padStart(2, '0');
     
@@ -752,7 +1000,6 @@ class KankaewApp {
     document.getElementById('receipt-table').textContent = tableNumber || 'สั่งกลับบ้าน (Takeaway)';
     document.getElementById('receipt-payment').textContent = paymentMethod === 'qr_code' ? 'เงินโอน (PromptPay)' : 'เงินสด (Cash)';
 
-    // Items list
     const itemsContainer = document.getElementById('receipt-items-container');
     itemsContainer.innerHTML = '';
 
@@ -777,13 +1024,11 @@ class KankaewApp {
       itemsContainer.appendChild(row);
     });
 
-    // Totals
     document.getElementById('receipt-subtotal').textContent = `฿${totals.subtotal.toFixed(2)}`;
     document.getElementById('receipt-service').textContent = `฿${totals.serviceCharge.toFixed(2)}`;
     document.getElementById('receipt-vat').textContent = `฿${totals.vat.toFixed(2)}`;
     document.getElementById('receipt-grandtotal').textContent = `฿${totals.grandTotal.toFixed(2)}`;
 
-    // Special order notes if any
     const rNotesRow = document.getElementById('receipt-notes-row');
     if (notes) {
       rNotesRow.style.display = 'block';
@@ -792,16 +1037,11 @@ class KankaewApp {
       rNotesRow.style.display = 'none';
     }
 
-    // QR Payment Code generation (Only if QR Code payment selected)
     const qrSection = document.getElementById('receipt-qr-section');
     if (paymentMethod === 'qr_code') {
       qrSection.style.display = 'flex';
       
-      // Calculate PromptPay amount
       const payAmount = totals.grandTotal.toFixed(2);
-      
-      // Load standard PromptPay API code generating image
-      // promptpay.io API generates exact scan code based on phone and amount
       const qrCodeImg = document.getElementById('promptpay-qr-code-img');
       qrCodeImg.src = `https://promptpay.io/${this.promptPayNumber}/${payAmount}.png`;
       document.getElementById('receipt-promptpay-info').textContent = `พร้อมเพย์: ${this.promptPayNumber}`;
@@ -809,7 +1049,6 @@ class KankaewApp {
       qrSection.style.display = 'none';
     }
 
-    // Open Receipt Modal
     this.openModal('receipt-modal');
   }
 }
@@ -822,4 +1061,3 @@ if (document.readyState === 'loading') {
 } else {
   window.appInstance = new KankaewApp();
 }
-

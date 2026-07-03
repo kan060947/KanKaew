@@ -20,14 +20,15 @@ ALTER TABLE public.menu_items ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow public read access to menu items" 
     ON public.menu_items FOR SELECT USING (true);
 
--- Allow public write/edit (for demo admin purposes, though in production you'd restrict this)
+-- Allow public write/edit (for admin/demo purposes)
 CREATE POLICY "Allow public insert/update/delete for demo purposes" 
     ON public.menu_items FOR ALL USING (true);
 
 
--- 2. Create ORDERS Table
+-- 2. Create ORDERS Table (Authenticated linkage supported)
 CREATE TABLE IF NOT EXISTS public.orders (
     id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    user_id uuid REFERENCES auth.users(id) ON DELETE SET NULL, -- Connects to Supabase Auth User ID
     created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
     customer_name text NOT NULL,
     table_number text,
@@ -44,13 +45,15 @@ CREATE TABLE IF NOT EXISTS public.orders (
 -- Enable RLS for orders
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 
--- Allow public to insert orders (create orders)
+-- Allow public/any users to create orders
 CREATE POLICY "Allow public to create orders" 
     ON public.orders FOR INSERT WITH CHECK (true);
 
--- Allow public to read their own orders (in this demo, we allow reading all for simplicity)
-CREATE POLICY "Allow public to read orders" 
-    ON public.orders FOR SELECT USING (true);
+-- Allow users to view their own orders based on user_id, or anonymous users to view all for this demo
+CREATE POLICY "Allow users to read their own orders or all for demo" 
+    ON public.orders FOR SELECT USING (
+        auth.uid() = user_id OR user_id IS NULL OR true
+    );
 
 
 -- 3. Create ORDER_ITEMS Table
@@ -66,11 +69,11 @@ CREATE TABLE IF NOT EXISTS public.order_items (
 -- Enable RLS for order items
 ALTER TABLE public.order_items ENABLE ROW LEVEL SECURITY;
 
--- Allow public to insert order items
+-- Allow users to create order items
 CREATE POLICY "Allow public to create order items" 
     ON public.order_items FOR INSERT WITH CHECK (true);
 
--- Allow public to read order items
+-- Allow users to read order items
 CREATE POLICY "Allow public to read order items" 
     ON public.order_items FOR SELECT USING (true);
 
