@@ -814,7 +814,12 @@ class KankaewApp {
   }
 }
 
-// Start Application when loaded
-window.addEventListener('DOMContentLoaded', () => {
+// Start Application when loaded safely
+if (document.readyState === 'loading') {
+  window.addEventListener('DOMContentLoaded', () => {
+    window.appInstance = new KankaewApp();
+  });
+} else {
   window.appInstance = new KankaewApp();
-});
+}
+
