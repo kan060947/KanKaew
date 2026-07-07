@@ -3,413 +3,384 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ร้านอาหารก้านแก้ว | Kankaew Restaurant - บริการสั่งอาหารออนไลน์</title>
-  <meta name="description" content="สัมผัสรสชาติอาหารไทยต้นตำรับระดับพรีเมียม สั่งซื้ออาหารออนไลน์พร้อมระบบการออกใบเสร็จที่รวดเร็วและปลอดภัย">
+  <title>อร่อยดี - สั่งอาหารออนไลน์ & ออกใบเสร็จ</title>
   
-  <!-- CSS Stylesheet -->
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Custom Stylesheet -->
   <link rel="stylesheet" href="style.css">
   
-  <!-- Supabase JS Client CDN -->
+  <!-- Supabase JS Client Library from CDN (CRITICAL) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-  <!-- Navigation Bar -->
-  <nav class="navbar">
-    <div class="container navbar-container">
-      <a href="#" class="logo">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent);"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-        ก้านแก้ว <span>Kankaew</span>
-      </a>
-      
-      <div class="nav-actions">
-        <!-- Database Connection Status Badge -->
-        <div id="db-status-badge">
-          <span style="color: var(--text-light);">● Loading status...</span>
-        </div>
-
-        <!-- User Authentication Section (Nav bar details) -->
-        <div id="nav-user-wrapper">
-          <!-- Populated dynamically via app.js -->
-        </div>
-        
-        <!-- Settings button to configure Supabase -->
-        <button class="btn-icon" id="settings-btn" title="ตั้งค่าการเชื่อมต่อฐานข้อมูล">
-          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-        </button>
-      </div>
-    </div>
-  </nav>
-
-  <!-- Hero / Banner Section -->
-  <header class="hero">
-    <div class="container">
-      <span class="hero-tag">Traditional & Modern Culinary</span>
-      <h1 class="hero-title">ศิลปะแห่งรสชาติไทยระดับพรีเมียม</h1>
-      <p class="hero-subtitle">
-        คัดสรรวัตถุดิบชั้นเลิศ ผสมผสานกรรมวิธีการปรุงอาหารแบบต้นตำรับ สู่เมนูจานโปรดของคุณที่สั่งง่ายเพียงปลายนิ้วสัมผัส
-      </p>
-    </div>
-  </header>
-
-  <!-- Main Menu Area -->
-  <main class="container">
+  <div class="app-container">
     
-    <!-- Controls (Search & Category Filters) -->
-    <div class="menu-controls">
-      <!-- Search Input -->
-      <div class="search-box">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-        <input type="text" id="search-input" placeholder="ค้นหาเมนูอาหารรสเลิศ...">
-      </div>
+    <!-- LEFT COLUMN: MAIN INTERFACE -->
+    <main class="main-content">
       
-      <!-- Category Tabs -->
-      <div class="category-tabs">
-        <button class="category-tab active" data-category="all">ทั้งหมด</button>
-        <button class="category-tab" data-category="appetizer">ของว่าง</button>
-        <button class="category-tab" data-category="main">อาหารจานหลัก</button>
-        <button class="category-tab" data-category="dessert">ของหวาน</button>
-        <button class="category-tab" data-category="drink">เครื่องดื่ม</button>
-      </div>
-    </div>
-
-    <!-- Menu Grid -->
-    <div class="menu-grid" id="menu-grid">
-      <!-- Generated via app.js -->
-    </div>
-
-  </main>
-
-  <!-- Floating Cart Trigger -->
-  <div class="floating-cart" id="floating-cart-trigger">
-    <div class="cart-icon-wrapper">
-      <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-      <span class="cart-count" id="floating-cart-count">0</span>
-    </div>
-    <div class="cart-text-details">
-      <span class="cart-text-label">รายการสั่งซื้อของคุณ</span>
-      <span class="cart-text-amount" id="floating-cart-amount">฿0.00</span>
-    </div>
-    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
-  </div>
-
-  <!-- Authentication Modal (Login/Register) -->
-  <div class="modal-overlay" id="auth-modal">
-    <div class="modal-container" style="max-width: 400px;">
-      <div class="modal-header">
-        <h2 class="modal-title">ยินดีต้อนรับ</h2>
-        <button class="btn-close" aria-label="Close modal">
-          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-        </button>
-      </div>
-      
-      <div class="auth-tabs">
-        <button class="auth-tab active" id="auth-tab-login">เข้าสู่ระบบ</button>
-        <button class="auth-tab" id="auth-tab-register">สมัครสมาชิก</button>
-      </div>
-
-      <div class="modal-body" style="padding-top: 0;">
-        <!-- Status Messages -->
-        <div class="auth-error-msg" id="auth-error">ข้อความผิดพลาด</div>
-        <div class="auth-success-msg" id="auth-success">ข้อความสำเร็จ</div>
-
-        <!-- Login Form -->
-        <div class="auth-form-wrapper active" id="auth-login-form-wrapper">
-          <form id="auth-login-form">
-            <div class="form-group">
-              <label for="login-email">อีเมล (Email) *</label>
-              <input type="email" id="login-email" placeholder="example@email.com" required>
-            </div>
-            <div class="form-group">
-              <label for="login-password">รหัสผ่าน (Password) *</label>
-              <input type="password" id="login-password" placeholder="••••••••" required>
-            </div>
-            <div style="margin-top: 24px;">
-              <button type="submit" class="btn-primary">เข้าสู่ระบบ</button>
-            </div>
-          </form>
+      <!-- NAVBAR -->
+      <header class="navbar">
+        <div class="logo-container">
+          <div class="logo-icon">
+            <span class="gold-symbol">฿</span>
+          </div>
+          <div class="logo-text">
+            <h1>ก้านแก้ว <span class="brand-font">Kankaew</span></h1>
+            <span>ระบบสั่งอาหารพรีเมียม</span>
+          </div>
         </div>
-
-        <!-- Register Form -->
-        <div class="auth-form-wrapper" id="auth-register-form-wrapper">
-          <form id="auth-register-form">
-            <div class="form-group">
-              <label for="register-name">ชื่อจริง/ชื่อผู้ใช้ (Name) *</label>
-              <input type="text" id="register-name" placeholder="ระบุชื่อของคุณ" required>
-            </div>
-            <div class="form-group">
-              <label for="register-email">อีเมล (Email) *</label>
-              <input type="email" id="register-email" placeholder="example@email.com" required>
-            </div>
-            <div class="form-group">
-              <label for="register-password">รหัสผ่าน (Password) *</label>
-              <input type="password" id="register-password" placeholder="อย่างน้อย 6 ตัวอักษร" minlength="6" required>
-            </div>
-            <div style="margin-top: 24px;">
-              <button type="submit" class="btn-primary">สมัครสมาชิก</button>
-            </div>
-          </form>
-        </div>
-
-      </div>
-    </div>
-  </div>
-
-  <!-- Cart & Checkout Modal -->
-  <div class="modal-overlay" id="cart-modal">
-    <div class="modal-container">
-      <div class="modal-header">
-        <h2 class="modal-title">ตะกร้าสินค้าของคุณ</h2>
-        <button class="btn-close" aria-label="Close modal">
-          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-        </button>
-      </div>
-      <div class="modal-body">
         
-        <!-- Cart Items list -->
-        <div id="cart-items-container" class="cart-items-list">
-          <!-- Filled via JavaScript -->
-        </div>
-
-        <!-- Bill Summary Card -->
-        <div class="bill-summary">
-          <div class="bill-row">
-            <span>ค่าอาหารรวม (Subtotal)</span>
-            <span id="cart-subtotal">฿0.00</span>
-          </div>
-          <div class="bill-row">
-            <span>ค่าบริการ (Service Charge 10%)</span>
-            <span id="cart-service">฿0.00</span>
-          </div>
-          <div class="bill-row">
-            <span>ภาษีมูลค่าเพิ่ม (VAT 7%)</span>
-            <span id="cart-vat">฿0.00</span>
-          </div>
-          <div class="bill-row total">
-            <span>ยอดรวมสุทธิ (Net Total)</span>
-            <span class="total-price" id="cart-total">฿0.00</span>
-          </div>
-        </div>
-
-        <!-- Checkout Form details -->
-        <form id="checkout-form">
-          <h3 class="modal-title" style="font-size: 18px; margin-bottom: 16px; border-top: 1px solid var(--border-color); padding-top: 20px;">ข้อมูลผู้สั่งซื้อ</h3>
+        <div class="nav-actions">
+          <!-- DB status / config indicator -->
+          <button class="db-status mock" id="dbStatusIndicator" onclick="openConfigDrawer()" title="ตั้งค่าการเชื่อมต่อฐานข้อมูล">
+            <span class="status-dot mock"></span> กำลังโหลดสถานะ...
+          </button>
           
-          <div class="form-row">
-            <div class="form-group">
-              <label for="customer-name">ชื่อผู้สั่งซื้อ *</label>
-              <input type="text" id="customer-name" placeholder="ระบุชื่อของคุณ" required>
-            </div>
-            <div class="form-group">
-              <label for="table-number">เลขโต๊ะ / สั่งกลับบ้าน</label>
-              <input type="text" id="table-number" placeholder="เช่น โต๊ะ 5 หรือ สั่งกลับบ้าน">
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="phone-number">เบอร์โทรศัพท์</label>
-              <input type="tel" id="phone-number" placeholder="เช่น 089-XXXXXXX">
-            </div>
-            <div class="form-group">
-              <label for="order-notes">หมายเหตุถึงครัว</label>
-              <input type="text" id="order-notes" placeholder="ระบุเพิ่มเติม เช่น แพ้อาหารทะเล">
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label>วิธีการชำระเงิน *</label>
-            <div class="payment-selector">
-              <div class="payment-option active" data-value="qr_code">
-                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h3m-3 0H9m12 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                <span class="payment-option-title">โอนชำระ (PromptPay)</span>
-              </div>
-              <div class="payment-option" data-value="cash">
-                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                <span class="payment-option-title">ชำระเงินสด (Cash)</span>
-              </div>
-            </div>
-          </div>
-
-          <div id="payment-qr-warning" class="info-alert" style="margin-top: 10px;">
-            ℹ️ ระบบจะออกคิวอาร์โค้ดพร้อมเพย์สำหรับชำระเงินให้คุณในใบเสร็จโดยอัตโนมัติ
-          </div>
-
-          <div style="margin-top: 24px;">
-            <button type="submit" class="btn-primary" id="cart-checkout-btn">
-              ยืนยันการสั่งซื้อและรับใบเสร็จ
-            </button>
-          </div>
-        </form>
-
-      </div>
-    </div>
-  </div>
-
-  <!-- Receipt View Modal (Printable) -->
-  <div class="modal-overlay" id="receipt-modal">
-    <div class="modal-container" style="max-width: 450px;">
-      <div class="modal-header">
-        <h2 class="modal-title">ใบรับเงิน / ใบเสร็จสั่งอาหาร</h2>
-        <button class="btn-close" aria-label="Close modal">
-          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-        </button>
-      </div>
-      <div class="modal-body" style="padding: 16px;">
-        
-        <!-- Printable receipt frame -->
-        <div id="receipt-modal-container">
-          <div class="receipt-paper">
-            <div class="receipt-header">
-              <div class="receipt-shop-name">ร้านอาหารก้านแก้ว</div>
-              <div class="receipt-shop-info">
-                123 ถนนสุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพฯ 10110<br>
-                โทร: 02-123-4567 | TAX ID: 0105563000999
-              </div>
-            </div>
-            
-            <div class="receipt-divider"></div>
-            
-            <div class="receipt-meta">
-              <div class="receipt-meta-row">
-                <span>เลขที่ใบเสร็จ:</span>
-                <span id="receipt-no">OR-10001</span>
-              </div>
-              <div class="receipt-meta-row">
-                <span>วันที่/เวลา:</span>
-                <span id="receipt-date">03/07/2569 14:30</span>
-              </div>
-              <div class="receipt-meta-row">
-                <span>ลูกค้า:</span>
-                <span id="receipt-customer">คุณมีเกียรติ</span>
-              </div>
-              <div class="receipt-meta-row">
-                <span>โต๊ะ/ประเภท:</span>
-                <span id="receipt-table">โต๊ะ 4</span>
-              </div>
-              <div class="receipt-meta-row">
-                <span>การชำระเงิน:</span>
-                <span id="receipt-payment">เงินโอน (PromptPay)</span>
-              </div>
-            </div>
-            
-            <div class="receipt-divider"></div>
-            
-            <!-- Items ordered list -->
-            <div class="receipt-items" id="receipt-items-container">
-              <!-- Dynamically populated -->
-            </div>
-            
-            <div class="receipt-divider"></div>
-            
-            <!-- Calculations -->
-            <div class="receipt-totals">
-              <div class="receipt-totals-row">
-                <span>ค่าอาหารรวม (Subtotal)</span>
-                <span id="receipt-subtotal">฿0.00</span>
-              </div>
-              <div class="receipt-totals-row">
-                <span>ค่าบริการ (Service Charge 10%)</span>
-                <span id="receipt-service">฿0.00</span>
-              </div>
-              <div class="receipt-totals-row">
-                <span>ภาษีมูลค่าเพิ่ม (VAT 7%)</span>
-                <span id="receipt-vat">฿0.00</span>
-              </div>
-              <div class="receipt-totals-row grand-total">
-                <span>ยอดเงินทั้งสิ้น (Net Total)</span>
-                <span id="receipt-grandtotal">฿0.00</span>
-              </div>
-            </div>
-
-            <!-- Optional order kitchen note -->
-            <div id="receipt-notes-row" style="margin-top: 15px; font-size: 11px; display: none;">
-              <strong>หมายเหตุ:</strong> <span id="receipt-notes"></span>
-            </div>
-
-            <!-- QR Code PromptPay Section -->
-            <div class="receipt-qr-payment" id="receipt-qr-section">
-              <div class="receipt-qr-title">สแกนชำระผ่าน PromptPay QR</div>
-              <div class="receipt-qr-code">
-                <!-- Live PromptPay QR code -->
-                <img id="promptpay-qr-code-img" src="" alt="PromptPay QR Code">
-              </div>
-              <div class="receipt-shop-info" id="receipt-promptpay-info" style="font-weight: 600; font-size: 13px;">พร้อมเพย์: 0812345678</div>
-              <div class="receipt-shop-info" style="font-size: 10px; color: #777777;">*ตรวจสอบชื่อผู้รับโอนและยอดเงินก่อนกดยืนยัน*</div>
-            </div>
-            
-            <div class="receipt-footer">
-              *** ขอบคุณที่ใช้บริการ / Thank You ***<br>
-              อาหารไทยต้นตำรับประทับใจทุกรสสัมผัส
-            </div>
-          </div>
-        </div>
-
-        <!-- Buttons Row -->
-        <div class="btn-actions-row" style="margin-top: 24px;">
-          <button class="btn-secondary" id="close-receipt-btn">ปิดหน้าต่าง</button>
-          <button class="btn-primary" id="print-receipt-btn">
-            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-            พิมพ์ใบเสร็จ (Print)
+          <button class="btn-icon" onclick="openCartDrawer()" title="ดูตะกร้าสินค้า">
+            <i class="fas fa-shopping-basket"></i>
+            <span class="badge" id="cartCountNavbar" style="display: none;">0</span>
+          </button>
+          
+          <button class="btn-icon" onclick="openConfigDrawer()" title="ตั้งค่าเชื่อมต่อ Supabase">
+            <i class="fas fa-cog"></i>
           </button>
         </div>
-
+      </header>
+      
+      <!-- NAVIGATION TABS (Storefront vs Order History) -->
+      <div class="app-tabs">
+        <button class="app-tab-btn active" id="tabCustomer">
+          <i class="fas fa-utensils"></i> สั่งอาหารออนไลน์
+        </button>
+        <button class="app-tab-btn" id="tabAdmin">
+          <i class="fas fa-receipt"></i> จัดการออเดอร์
+        </button>
       </div>
+
+      <!-- VIEW 1: CUSTOMER VIEW (STOREFRONT) -->
+      <div class="view-panel active" id="viewCustomer">
+        
+        <!-- HERO CARD (Kankaew Premium Style) -->
+        <section class="hero">
+          <div class="hero-content-centered">
+            <span class="hero-subtitle">TRADITIONAL & MODERN CULINARY</span>
+            <h2 class="hero-title">ศิลปะแห่งรสชาติไทยระดับพรีเมียม</h2>
+            <p class="hero-desc">คัดสรรวัตถุดิบชั้นเลิศ ผสมผสานกรรมวิธีการปรุงอาหารแบบต้นตำรับ สู่เมนูจานโปรดของคุณที่สั่งง่ายเพียงปลายนิ้วสัมผัส</p>
+          </div>
+        </section>
+
+        <!-- CATEGORIES & SEARCH BAR -->
+        <div class="filter-search-bar">
+          <div class="search-box">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" id="searchInput" placeholder="ค้นหาเมนูอาหารรสเลิศ..." oninput="handleSearch()">
+          </div>
+          <nav class="categories-container">
+            <div class="categories-scroll">
+              <button class="category-tab active" data-category="all" onclick="filterCategory('all')">
+                ทั้งหมด
+              </button>
+              <button class="category-tab" data-category="appetizer" onclick="filterCategory('appetizer')">
+                ของว่าง
+              </button>
+              <button class="category-tab" data-category="main" onclick="filterCategory('main')">
+                อาหารจานหลัก
+              </button>
+              <button class="category-tab" data-category="dessert" onclick="filterCategory('dessert')">
+                ของหวาน
+              </button>
+              <button class="category-tab" data-category="drink" onclick="filterCategory('drink')">
+                เครื่องดื่ม
+              </button>
+            </div>
+          </nav>
+        </div>
+
+        <!-- MENU ITEMS GRID -->
+        <section class="menu-section">
+          <div class="section-header">
+            <h3 class="section-title">รายการแนะนำประจำวัน</h3>
+          </div>
+          <div class="menu-grid" id="menuGrid">
+            <!-- Dynamically populated from JS -->
+          </div>
+        </section>
+        
+      </div>
+
+      <!-- VIEW 2: ADMIN VIEW (ORDER HISTORY) -->
+      <div class="view-panel" id="viewAdmin">
+        <section class="menu-section">
+          <div class="section-header">
+            <h3 class="section-title">จัดการรายการสั่งซื้อ (Real-time Orders)</h3>
+          </div>
+          <div class="order-history-list" id="orderHistoryList">
+            <!-- Dynamically populated from JS -->
+          </div>
+        </section>
+      </div>
+
+    </main>
+
+    <!-- RIGHT COLUMN: SIDEBAR CART (DESKTOP) -->
+    <aside class="sidebar-cart">
+      <div class="cart-header">
+        <div class="cart-title" style="position: relative; display: flex; align-items: center; gap: 12px;">
+          <div style="position: relative;">
+            <i class="fas fa-shopping-cart"></i>
+            <span class="badge" id="cartCountBadge" style="display: none;">0</span>
+          </div>
+          <h3>ตะกร้าสินค้าของคุณ</h3>
+        </div>
+      </div>
+      
+      <div class="cart-items-container" id="sidebarCartItems">
+        <!-- Dynamically populated from JS -->
+      </div>
+      
+      <div class="cart-footer">
+        <div class="summary-row">
+          <span>ค่าอาหาร (Subtotal)</span>
+          <span id="sSubtotalVal">0.00 ฿</span>
+        </div>
+        <div class="summary-row">
+          <span>ค่าบริการ 10% (Service Charge)</span>
+          <span id="sServiceChargeVal">0.00 ฿</span>
+        </div>
+        <div class="summary-row">
+          <span>ภาษีมูลค่าเพิ่ม 7% (VAT)</span>
+          <span id="sVatVal">0.00 ฿</span>
+        </div>
+        <div class="summary-row total">
+          <span>ยอดรวมสุทธิ (Total)</span>
+          <span class="total-price" id="sTotalVal">0.00 ฿</span>
+        </div>
+        
+        <button class="btn-checkout" id="btnSidebarCheckout" onclick="openCheckout()" disabled>
+          ดำเนินการสั่งซื้อ <i class="fas fa-arrow-right"></i>
+        </button>
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- FLOATING MOBILE CART BAR -->
+  <div class="mobile-cart-bar" id="mobileCartBar">
+    <div class="mobile-cart-info">
+      <div class="mobile-cart-icon">
+        <i class="fas fa-shopping-basket"></i>
+        <span class="badge" id="cartCountMobile">0</span>
+      </div>
+      <div class="mobile-cart-total">
+        <span>ราคารวม</span>
+        <h3 id="cartTotalMobile">0.00 ฿</h3>
+      </div>
+    </div>
+    <button class="btn-view-cart" onclick="openCartDrawer()">ดูตะกร้าสินค้า</button>
+  </div>
+
+  <!-- DRAWER OVERLAY (Used for mobile drawers) -->
+  <div class="drawer-overlay" onclick="closeActiveDrawer()"></div>
+
+  <!-- MOBILE CART DRAWER -->
+  <div class="drawer" id="cartDrawer">
+    <div class="drawer-header">
+      <div class="cart-title">
+        <i class="fas fa-shopping-cart"></i>
+        <h3>ตะกร้าสินค้าของคุณ</h3>
+      </div>
+      <button class="btn-close-cart" onclick="closeActiveDrawer()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="cart-items-container" id="cartItemsContainer">
+      <!-- Dynamically populated from JS -->
+    </div>
+    <div class="cart-footer">
+      <div class="summary-row">
+        <span>ค่าอาหาร (Subtotal)</span>
+        <span id="subtotalVal">0.00 ฿</span>
+      </div>
+      <div class="summary-row">
+        <span>ค่าบริการ 10% (Svc Chg)</span>
+        <span id="serviceChargeVal">0.00 ฿</span>
+      </div>
+      <div class="summary-row">
+        <span>ภาษีมูลค่าเพิ่ม 7% (VAT)</span>
+        <span id="vatVal">0.00 ฿</span>
+      </div>
+      <div class="summary-row total">
+        <span>ยอดรวมสุทธิ (Total)</span>
+        <span class="total-price" id="totalVal">0.00 ฿</span>
+      </div>
+      <button class="btn-checkout" id="btnCheckout" onclick="openCheckout()" disabled>
+        ดำเนินการสั่งซื้อ <i class="fas fa-arrow-right"></i>
+      </button>
     </div>
   </div>
 
-  <!-- Supabase Settings & Config Modal -->
-  <div class="modal-overlay" id="settings-modal">
-    <div class="modal-container">
+  <!-- SUPABASE CONFIGURATION DRAWER -->
+  <div class="drawer" id="configDrawer">
+    <div class="drawer-header">
+      <div class="cart-title">
+        <i class="fas fa-database"></i>
+        <h3>ตั้งค่าเชื่อมต่อฐานข้อมูล</h3>
+      </div>
+      <button class="btn-close-cart" onclick="closeActiveDrawer()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="drawer-body">
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">
+        ระบุข้อมูลการเชื่อมต่อ Supabase ของคุณเพื่อจัดเก็บรายการอาหารและออเดอร์ทั้งหมดในฐานข้อมูลจริงของคุณ
+      </p>
+      
+      <form id="configForm">
+        <div class="form-group">
+          <label for="sbUrl">Supabase Project URL</label>
+          <input type="url" id="sbUrl" class="form-control" placeholder="https://your-project.supabase.co" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="sbKey">Supabase Anon Key</label>
+          <input type="password" id="sbKey" class="form-control" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." required>
+        </div>
+        
+        <div style="margin-top: 24px;">
+          <button type="submit" class="btn-primary" style="width: 100%;">
+            <i class="fas fa-save"></i> บันทึกข้อมูลและเชื่อมต่อ
+          </button>
+          
+          <button type="button" class="btn-secondary" style="width: 100%; margin-top: 10px;" onclick="localStorage.clear(); alert('ล้างค่าการเชื่อมต่อแล้ว'); location.reload();">
+            <i class="fas fa-trash"></i> ล้างการเชื่อมต่อ (กลับไปโหมดจำลอง)
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- CHECKOUT MODAL -->
+  <div class="modal-overlay" id="checkoutModalOverlay">
+    <div class="modal" id="checkoutModal">
       <div class="modal-header">
-        <h2 class="modal-title">ตั้งค่าฐานข้อมูล Supabase</h2>
-        <button class="btn-close" aria-label="Close modal">
-          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        <h3>กรอกรายละเอียดการสั่งซื้อ</h3>
+        <button class="btn-close-cart" onclick="closeModal(checkoutModal)" style="display: block;">
+          <i class="fas fa-times"></i>
         </button>
       </div>
-      <div class="modal-body">
-        
-        <div class="info-alert" style="background-color: var(--primary-light); border-left-color: var(--primary);">
-          💡 หากเว้นว่างฟิลด์ Supabase URL และ API Key ไว้ ระบบจะใช้งานฐานข้อมูล <strong>Demo Mode (Local DB)</strong> ในเบราว์เซอร์ เพื่อให้ระบบทำงานได้ทันที
-        </div>
-
-        <form id="settings-form">
+      <form id="checkoutForm">
+        <div class="modal-body">
           <div class="form-group">
-            <label for="input-url">Supabase URL</label>
-            <input type="url" id="input-url" placeholder="https://xxxxxx.supabase.co">
+            <label for="inputCustomerName">ชื่อลูกค้า *</label>
+            <input type="text" id="inputCustomerName" class="form-control" placeholder="เช่น คุณสมศักดิ์" required>
           </div>
           
           <div class="form-group">
-            <label for="input-key">Supabase Anon API Key</label>
-            <input type="password" id="input-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+            <label for="inputCustomerPhone">เบอร์โทรศัพท์</label>
+            <input type="tel" id="inputCustomerPhone" class="form-control" placeholder="เช่น 089-xxxxxxx">
           </div>
-
+          
           <div class="form-group">
-            <label for="input-promptpay">เบอร์พร้อมเพย์รับชำระเงิน (PromptPay Phone / Tax ID) *</label>
-            <input type="text" id="input-promptpay" value="0812345678" required>
-            <span style="font-size: 12px; color: var(--text-secondary); margin-top: 4px; display: block;">กรอกเบอร์มือถือพร้อมเพย์หรือเลขบัตรประจำตัวประชาชน เพื่อออก QR Code ในใบเสร็จจริง</span>
+            <label for="inputTableNumber">เลขโต๊ะอาหาร <span style="font-size: 0.75rem; text-transform: none; font-weight: normal; color: var(--text-muted);">(เว้นว่างไว้หากสั่งกลับบ้าน)</span></label>
+            <input type="text" id="inputTableNumber" class="form-control" placeholder="ระบุเลขโต๊ะ เช่น โต๊ะ 5 หรือ A1">
           </div>
-
-          <h4 style="margin: 20px 0 10px 0; border-top: 1px solid var(--border-color); padding-top: 15px;">โครงสร้างตาราง SQL สำหรับจัดตั้ง Supabase</h4>
-          <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px;">
-            คัดลอกคำสั่งด้านล่างนี้ไปวางและรันในหน้า <strong>SQL Editor</strong> บนเว็บไซต์ Supabase ของคุณเพื่อเตรียมความพร้อม:
-          </p>
-          <div class="sql-instructions">
--- รันโค้ด SQL จากไฟล์ supabase-schema.sql ในไดเรกทอรีโครงการ
--- ประกอบไปด้วยการสร้างตาราง menu_items, orders, order_items
--- และติดตั้งนโยบาย RLS (Row Level Security) เพื่อความปลอดภัย
+          
+          <div class="form-group">
+            <label>วิธีการชำระเงิน</label>
+            <input type="hidden" id="inputPaymentMethod" value="cash">
+            <div class="payment-selector">
+              <div class="payment-option active" id="paymentCash">
+                <i class="fas fa-money-bill-wave"></i>
+                <span>เงินสด</span>
+              </div>
+              <div class="payment-option" id="paymentTransfer">
+                <i class="fas fa-qrcode"></i>
+                <span>โอนผ่านบัญชีธนาคาร</span>
+              </div>
+            </div>
           </div>
-
-          <div style="margin-top: 24px;">
-            <button type="submit" class="btn-primary">บันทึกการตั้งค่า</button>
+          
+          <!-- Bank Transfer Details Container -->
+          <div class="bank-details" id="bankDetails">
+            <div class="bank-row">
+              <span>ธนาคาร:</span>
+              <span>กสิกรไทย</span>
+            </div>
+            <div class="bank-row">
+              <span>ชื่อบัญชี:</span>
+              <span>ร้านก้านแก้ว โภชนา</span>
+            </div>
+            <div class="bank-row">
+              <span>เลขบัญชี:</span>
+              <span>123-4-56789-0</span>
+            </div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 8px; text-align: center;">
+              * ใบเสร็จจะสร้างพร้อมคิวอาร์โค้ดสำหรับสแกนโอนเงินสำเร็จรูปทันที
+            </div>
           </div>
-        </form>
+        </div>
+        
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeModal(checkoutModal)">ยกเลิก</button>
+          <button type="submit" class="btn-primary">
+            <i class="fas fa-check-circle"></i> ยืนยันการสั่งซื้อ
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 
+  <!-- ADD ITEM NOTE MODAL -->
+  <div class="modal-overlay" id="noteModalOverlay">
+    <div class="modal" id="noteModal" style="max-width: 450px;">
+      <div class="modal-header">
+        <h3 id="noteModalTitle">ระบุความต้องการเพิ่มเติม</h3>
+        <button class="btn-close-cart" onclick="closeModal(noteModal)" style="display: block;">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <form id="noteForm">
+        <div class="modal-body">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label for="noteInput">ความต้องการพิเศษ (เช่น เผ็ดน้อย, ไม่ใส่ผัก, ขอซอสเพิ่ม)</label>
+            <input type="text" id="noteInput" class="form-control" placeholder="ระบุข้อมูลที่นี่ (ถ้ามี)">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeModal(noteModal)">สั่งปกติ</button>
+          <button type="submit" class="btn-primary">ใส่ลงตะกร้า</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- RECEIPT DISPLAY MODAL -->
+  <div class="modal-overlay" id="receiptModalOverlay">
+    <div class="modal" id="receiptModal" style="max-width: 380px;">
+      <div class="modal-header">
+        <h3>ใบเสร็จรับเงินออเดอร์</h3>
+        <button class="btn-close-cart" onclick="closeModal(receiptModal)" style="display: block;">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body" style="background-color: var(--bg-accent); padding: 16px;">
+        <div id="receiptContent">
+          <!-- Dynamic Receipt Template Inserted Here -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" onclick="closeModal(receiptModal)">ปิดหน้าต่าง</button>
+        <button type="button" class="btn-primary" onclick="printReceipt()">
+          <i class="fas fa-print"></i> พิมพ์ใบเสร็จ (Print)
+        </button>
       </div>
     </div>
   </div>
 
-  <!-- Core JavaScript -->
+  <!-- Core App Controller Script -->
   <script src="app.js"></script>
 </body>
 </html>
